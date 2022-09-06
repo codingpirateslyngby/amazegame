@@ -1,0 +1,74 @@
+class Game_Code:
+    def __init__(self, SCREEN_SIZE):
+        self.display_surface = pygame.display.get_surface()
+        self.image = pygame.image.load("backgorund.png").convert_alpha()
+        self.background = pygame.transform.scale(self.image, SCREEN_SIZE)
+        self.player = Game_Object("player", MAP_SIZE, MAP_SIZE,-32,-32)
+        self.dir = "none"
+        self.creat_map(14)
+
+    def creat_map(self, size):
+        self.map_items = []
+        for itm_y in range(size):
+            for itm_x in range(size):
+                index = itm_x + itm_y * size
+                if MAP_DATA[index] == "1":
+                    self.map_items.append(Game_Object("wall", itm_x * MAP_SIZE, itm_y * MAP_SIZE,-32,-32))
+                    MAP_GRID.append(1)
+                else:
+                    MAP_GRID.append(0)
+
+    def update(self):
+        self.player.move(self.dir)
+        self.dir = "none"
+
+    def move(self, input):
+        self.dir = input
+
+    def draw(self):
+        self.display_surface.blit(self.background, (0, 0))
+        self.player.draw(self.display_surface)
+        for obj in self.map_items:
+            obj.draw(self.display_surface)
+
+
+class Game_Object:
+    def __init__(self, name, x, y,off_x,off_y):
+        self.display_surface = pygame.display.get_surface()
+        self.image = pygame.image.load(name + ".png").convert_alpha()
+        self.x = x
+        self.y = y
+        self.grid_x = 1
+        self.grid_y = 1
+        self.off_x = off_x
+        self.off_y = off_y
+        self.index = 0
+        self.speed = 4
+
+    def move(self, dir):
+
+        if dir == "up":
+            self.y -= self.speed
+            self.grid_y, self.y = self.can_stand(self.y, self.index, -1) 
+        if dir == "down":
+            self.y += self.speed
+            self.grid_y, self.y = self.can_stand(self.y, self.index, 1)
+        if dir == "left":
+            self.x -= self.speed
+            self.grid_x, self.x = self.can_stand(self.x, self.index, -1)
+        if dir == "right":
+            self.x += self.speed
+            self.grid_x, self.x = self.can_stand(self.x, self.index, 1)
+
+        self.index = self.grid_x + self.grid_y * 14
+
+    def can_stand(self, a, i, off):
+        gid = int((a + 32) / 64)
+        if gid >= 1 and gid < 13:
+            if MAP_GRID[i] == 0:
+                return gid, a
+
+        return gid, gid * MAP_SIZE - 32 * off
+
+    def draw(self, map):
+        map.blit(self.image, (self.x+self.off_x, self.y+self.off_y))
